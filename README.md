@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Excel to LLM Converter
 
-## Getting Started
+A web application that converts Excel files into structured data format suitable for LLM consumption. The application extracts not only the content but also preserves styling information like colors, fonts, and formatting.
 
-First, run the development server:
+## Project Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+execl4llm/
+├── api/                      # Python FastAPI Backend
+│   ├── main.py              # Main FastAPI application
+│   └── run.py               # Server startup script
+├── src/                     # Next.js Frontend
+│   ├── app/                 # Next.js app directory
+│   │   ├── layout.tsx       # Root layout component
+│   │   ├── page.tsx         # Main page component
+│   │   └── globals.css      # Global styles
+│   ├── components/          # React components
+│   │   └── ui/             # UI components
+│   │       ├── file-upload.tsx      # File upload component
+│   │       ├── sheet-selector.tsx   # Sheet selection component
+│   │       └── markdown-display.tsx  # Markdown output display
+│   ├── lib/                 # Utility functions
+│   │   └── utils.ts         # Common utilities
+│   └── types/               # TypeScript type definitions
+│       ├── js-xlsx.d.ts     # Excel library types
+│       ├── sheetjs-style.d.ts
+│       └── xlsx.d.ts
+├── public/                  # Static files
+├── next.config.js           # Next.js configuration
+├── package.json             # Frontend dependencies
+├── tailwind.config.js       # Tailwind CSS configuration
+└── tsconfig.json           # TypeScript configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **File Upload**: Drag-and-drop interface for Excel file upload
+- **Sheet Selection**: Choose which sheet to analyze
+- **Style Preservation**: Extracts and preserves:
+  - Font colors
+  - Background colors
+  - Font styles (bold, italic, underline)
+  - Cell formatting
+- **Markdown Output**: Converts Excel data to structured markdown format
+- **Rich Text Support**: Handles rich text content in cells
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Technology Stack
 
-## Learn More
+### Frontend
+- Next.js 14
+- React 18
+- TypeScript
+- TailwindCSS
+- Radix UI Components
 
-To learn more about Next.js, take a look at the following resources:
+### Backend
+- Python 3.11
+- FastAPI
+- openpyxl for Excel processing
+- uvicorn for ASGI server
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Endpoints
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### `/api/sheets` (POST)
+- Accepts Excel file upload
+- Returns list of sheet names in the workbook
 
-## Deploy on Vercel
+### `/api/analyze-sheet` (POST)
+- Accepts Excel file and sheet name
+- Returns structured data including:
+  - Cell content
+  - Styling information
+  - Cell coordinates
+  - Rich text content
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Data Models
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### CellStyle
+```typescript
+{
+  backgroundColor?: string;  // Hex color code
+  color?: string;           // Hex color code
+  fontWeight?: string;      // "bold" | null
+  fontStyle?: string;       // "italic" | null
+  textDecoration?: string;  // "underline" | null
+}
+```
+
+### CellInfo
+```typescript
+{
+  content: string;      // Cell content
+  richText: string;     // Rich text content
+  style: CellStyle;     // Cell styling
+  address: string;      // Cell coordinate (e.g., "A1")
+}
+```
+
+### SheetData
+```typescript
+{
+  name: string;         // Sheet name
+  cells: CellInfo[];    // Array of cell information
+}
+```
+
+## Setup and Running
+
+1. Install frontend dependencies:
+```bash
+npm install
+```
+
+2. Install backend dependencies:
+```bash
+cd api
+pip install fastapi uvicorn openpyxl python-multipart
+```
+
+3. Start the backend server:
+```bash
+cd api
+python run.py
+```
+
+4. Start the frontend development server:
+```bash
+npm run dev
+```
+
+The application will be available at:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+
+## Development Notes
+
+- The backend uses CORS to allow requests from any origin
+- Cell styles are extracted using openpyxl's style attributes
+- Color values are converted from various formats to hex codes
+- The frontend uses a responsive design with TailwindCSS
+- Error handling is implemented for both frontend and backend
